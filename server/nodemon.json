@@ -1,0 +1,7 @@
+{
+  "env": {
+    "DB_USER": "woldemar1977",
+    "DB_PASSWORD": "16021977qw",
+    "DB_NAME": "OrdersTrackingData"
+  }
+}
