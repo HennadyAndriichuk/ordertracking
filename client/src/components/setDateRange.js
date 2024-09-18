@@ -1,17 +1,37 @@
 import React from 'react';
 import ClearIcon from '@mui/icons-material/Clear';
 import { Button } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+  setTempStartDate, 
+  setTempEndDate, 
+  setStartDateRange, 
+  setEndDateRange, 
+  resetDateRange 
+} from '../features/dateRangeSlice';
 
-  const SetDateRange =({
-    handleSetDateRange, 
-    handleResetDates, 
-    handleSetTempStartDate, 
-    handleSetTempEndDate, 
-    startDate, 
-    endDate, 
-    tempStartDate, 
-    tempEndDate
-  })=>{
+  const SetDateRange =()=>{
+
+    const dispatch = useDispatch();
+
+    const { startDate, endDate, tempStartDate, tempEndDate } = useSelector((state) => state.dateRange);
+
+    const handleSetTempStartDate = (value) => {
+      dispatch(setTempStartDate({ tempStartDate: value }));
+    };
+
+    const handleSetTempEndDate = (value) => {
+      dispatch(setTempEndDate({ tempEndDate: value }));
+    };
+
+    const handleSetDateRange = () => {
+      dispatch(setStartDateRange()); 
+      dispatch(setEndDateRange());  
+    };
+
+    const handleResetDates = () => {
+      dispatch(resetDateRange()); 
+    };
     
     return(
       <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>

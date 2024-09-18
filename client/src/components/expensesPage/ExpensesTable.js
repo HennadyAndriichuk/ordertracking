@@ -3,8 +3,9 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import { nanoid } from 'nanoid';
 import ExpensesRowComponent from './ExpensesRowComponent';
 import { fetchApi } from '../../utils/backendApi';
+import { useSelector } from 'react-redux';
 
-const ExpensesTable = ({userId, startDate, endDate}) => {
+const ExpensesTable = ({userId}) => {
   const columns = ["Дата", "Реклама", "Затраты на возврат", "Затраты на брак", "Затраты на хостинг", "Другие затраты"];
   const initialCosts = {
     id: nanoid(),
@@ -19,6 +20,7 @@ const ExpensesTable = ({userId, startDate, endDate}) => {
   };
 
   const [costs, setCosts] = useState([]);
+  const { startDate, endDate } = useSelector((state) => state.dateRange);
 
   const fetchExpensesUrl = "http://localhost:4000/expenses";
 

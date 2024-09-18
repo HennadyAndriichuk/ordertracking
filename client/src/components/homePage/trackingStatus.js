@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import { nanoid } from 'nanoid';
 import TableRowComponent from './TableRowComponent';
 import { fetchApi } from '../../utils/backendApi';
+import { useSelector } from 'react-redux';
 
 const TrackingStatus = ({ userId }) => {
   const columns = ["Номер заказа", "Статус", "Дата получения", "Сумма документа", "Номер телефона", "Себестоимость"];
@@ -25,6 +26,7 @@ const TrackingStatus = ({ userId }) => {
 
   const [orders, setOrders] = useState([]);
   const [filterPhoneNumber, setFilterPhoneNumber] = useState("");
+  const { startDate, endDate } = useSelector((state) => state.dateRange);
   
   useEffect(() => {
     const fetchData = async () => {

@@ -10,13 +10,18 @@ export const dateRangeSlice = createSlice({
     tempEndDate: ""
   },
   reducers: {
-    setDateRange: (state) => {
+    setStartDateRange: (state) => {
       state.startDate = state.tempStartDate;
+    },
+    setEndDateRange: (state) => {
       state.endDate = state.tempEndDate;
     },
     setTempStartDate: (state, action) => {
-      const { tempStartDate, tempEndDate } = action.payload;
+      const { tempStartDate } = action.payload;
       state.tempStartDate = tempStartDate;
+    },
+    setTempEndDate: (state, action) => {
+      const { tempEndDate } = action.payload;
       state.tempEndDate = tempEndDate;
     },
     resetDateRange: (state) => {
@@ -28,5 +33,5 @@ export const dateRangeSlice = createSlice({
   }
 });
 
-export const { setDateRange, resetDateRange } = dateRangeSlice.actions;
+export const { setStartDateRange, setEndDateRange, setTempStartDate, setTempEndDate, resetDateRange } = dateRangeSlice.actions;
 export default dateRangeSlice.reducer;
