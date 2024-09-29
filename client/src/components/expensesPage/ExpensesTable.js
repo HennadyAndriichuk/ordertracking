@@ -5,77 +5,97 @@ import ExpensesRowComponent from './ExpensesRowComponent';
 import { fetchApi } from '../../utils/backendApi';
 import { useSelector } from 'react-redux';
 
-const ExpensesTable = ({userId}) => {
+const ExpensesTable = ({ userId }) => {
   const columns = ["Дата", "Реклама", "Затраты на возврат", "Затраты на брак", "Затраты на хостинг", "Другие затраты"];
+  
+  // Начальная структура для новой строки затрат
   const initialCosts = {
     id: nanoid(),
     date: "",
     advertising: "",
     returnCosts: "",
     defectCosts: "",
-    hostingCosts: "", 
+    hostingCosts: "",
     otherCosts: "",
     userId,
     isNew: true
   };
 
-  const [costs, setCosts] = useState([]);
+  const fetchExpensesUrl = "http://localhost:4000/expenses";
+  
+  // Получаем данные из redux
+  const costsState = useSelector((state) => state.costsState || []); // Убедимся, что это массив
   const { startDate, endDate } = useSelector((state) => state.dateRange);
 
-  const fetchExpensesUrl = "http://localhost:4000/expenses";
+  const [costs, setCosts] = useState([]);
 
+  // Обновляем состояние costs из costsState при изменении
   useEffect(() => {
-    const fetchData = async () => {
-      if (!userId) return; // Не выполнять запрос, если userId нет
+    if (Array.isArray(costsState)) {
+      setCosts(costsState);
+    } else {
+      console.error('costsState is not an array:', costsState);
+    }
+  }, [costsState]);
 
-      try{
-        const fetchedCosts = await fetchApi('http://localhost:4000/expenses/get-expenses', 'POST', null, { userId });
-        setCosts(fetchedCosts);
-      }catch (error) {
-        console.error('Error fetching costs:', error);
-        setCosts([]); // Устанавливаем пустой массив, если произошла ошибка
-      };
-    };
-  
-    fetchData();
-  }, [userId]);
-  
-
+  // Добавление новой строки
   const addRow = () => {
     setCosts([...costs, { ...initialCosts, isNew: true }]);
   };
 
+  // Сохранение строки (POST или PATCH)
   const saveRow = useCallback(async (data) => {
     const { id, date, advertising, returnCosts, defectCosts, hostingCosts, otherCosts, isNew } = data;
     const payload = { id, date, advertising, returnCosts, defectCosts, hostingCosts, otherCosts, userId };
 
-    if (isNew) {
-      const response = await fetchApi(fetchExpensesUrl, 'POST', null, payload );
-      console.log(response);
-      setCosts(response);
-    } else {
-      const response = await fetchApi(fetchExpensesUrl, 'PATCH', id, payload );
-      setCosts(response);
+    try {
+      let response;
+      if (isNew) {
+        response = await fetchApi(fetchExpensesUrl, 'POST', null, payload);
+      } else {
+        response = await fetchApi(fetchExpensesUrl, 'PATCH', id, payload);
+      }
+      // Проверяем, является ли response массивом, перед обновлением состояния
+      if (Array.isArray(response)) {
+        setCosts(response);
+      } else {
+        console.error('Server response is not an array:', response);
+      }
+    } catch (error) {
+      console.error('Error saving row:', error);
     }
   }, [setCosts, userId]);
 
+  // Удаление строки
   const deleteRow = useCallback(async (id, isNew) => {
     if (isNew) {
       setCosts(costs => costs.filter(cost => cost.id !== id));
     } else {
-      const response = await fetchApi(fetchExpensesUrl, 'DELETE', null, { expenseId: id, userId });
-      setCosts(response);
+      try {
+        const response = await fetchApi(fetchExpensesUrl, 'DELETE', null, { expenseId: id, userId });
+        if (Array.isArray(response)) {
+          setCosts(response);
+        } else {
+          console.error('Server response is not an array:', response);
+        }
+      } catch (error) {
+        console.error('Error deleting row:', error);
+      }
     }
   }, [setCosts, userId]);
 
+  // Фильтрация по диапазону дат
   const filteredCosts = costs.filter(cost => {
     const costDate = new Date(cost.date);
+    // Проверка валидности даты
+    if (isNaN(costDate)) {
+      return false;
+    }
     const isWithinDateRange =
-    (!startDate || costDate >= new Date(startDate)) &&
-    (!endDate || costDate <= new Date(endDate));   
-    return (
-      isWithinDateRange 
-    );
+      (!startDate || costDate >= new Date(startDate)) &&
+      (!endDate || costDate <= new Date(endDate));
+
+    return isWithinDateRange;
   });
 
   return (
@@ -87,11 +107,11 @@ const ExpensesTable = ({userId}) => {
               <TableCell key={index}>{column}</TableCell>
             ))}
             <TableCell>
-              <Button 
-                color="primary" 
-                variant="contained" 
+              <Button
+                color="primary"
+                variant="contained"
                 onClick={addRow}
-                disabled={!userId} 
+                disabled={!userId}
               >
                 Добавить строку
               </Button>

@@ -3,7 +3,10 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 import { nanoid } from 'nanoid';
 import TableRowComponent from './TableRowComponent';
 import { fetchApi } from '../../utils/backendApi';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setFilteredOrders } from '../../features/ordersSlice';
+import { setCostsState } from '../../features/costsSlice';
+
 
 const TrackingStatus = ({ userId }) => {
   const columns = ["Номер заказа", "Статус", "Дата получения", "Сумма документа", "Номер телефона", "Себестоимость"];
@@ -22,17 +25,20 @@ const TrackingStatus = ({ userId }) => {
     }
   };
 
+  const dispatch = useDispatch();
+
   const fetchOrdersUrl = "http://localhost:4000/orders";
+  
 
   const [orders, setOrders] = useState([]);
   const [filterPhoneNumber, setFilterPhoneNumber] = useState("");
   const { startDate, endDate } = useSelector((state) => state.dateRange);
+  const [costs, setCosts] = useState([]);
   
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) return; // Не выполнять запрос, если userId нет
       try {
-        
         const fetchedOrders = await fetchApi('http://localhost:4000/orders/get-orders', 'POST', null, { userId });
         setOrders(fetchedOrders.map(order => ({
           ...order,
@@ -46,6 +52,33 @@ const TrackingStatus = ({ userId }) => {
   
     fetchData();
   }, [userId]);
+
+  
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userId) return; // Не выполнять запрос, если userId нет
+
+      try {
+        const fetchedCosts = await fetchApi('http://localhost:4000/expenses/get-expenses', 'POST', null, { userId });
+        // Проверяем, что fetchedCosts действительно является массивом
+        if (Array.isArray(fetchedCosts)) {
+          setCosts(fetchedCosts); 
+        } else {
+          console.error('Expected fetchedCosts to be an array, received:', typeof fetchedCosts);
+        }
+      } catch (error) {
+        console.error('Error fetching costs:', error);
+        setCosts([]); // Устанавливаем пустой массив, если произошла ошибка
+      };
+    };
+  
+    fetchData();
+  }, [userId]);
+
+  useEffect(() => {
+    console.log(costs)
+  }, [costs]);
   
 
   const existingOrderNumbers = useMemo(() => orders.map(order => order.orderNumber), [orders]);
@@ -99,6 +132,14 @@ const TrackingStatus = ({ userId }) => {
       (!filterPhoneNumber || order.phoneNumber === filterPhoneNumber)
     );
   });
+
+  useEffect(() => {
+    dispatch(setFilteredOrders(filteredOrders));
+  }, [filteredOrders, dispatch]);
+
+  useEffect(() => {
+    dispatch(setCostsState(costs)); // Сохраняем массив costs в redux
+  }, [costs, dispatch]);
 
   return (
     <TableContainer component={Paper}>
